@@ -6,9 +6,9 @@ An aggressor script accompanies it, to monitor for the provided process name and
 
 When the aggressor script is loaded on Cobalt Strike, three new commands will be available:
 
-* start_entropyCapture – Starts the heartbeat checking for the stated process and injects into them.
-* stop_entropyCapture – Stops the heartbeat checking but will not unload the already loaded DLL.
-* show_entropyCapture – Prints the contents of the data.bin file showing captured entropy.
+* start_entropyCapture – Starts checking for the stated process and injects into them.
+* stop_entropyCapture – Stops checking but will not unload the already loaded DLL.
+* show_entropyCapture – Prints the contents of the file showing captured entropy.
 
 ## Screenshot
 
