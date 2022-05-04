@@ -6,7 +6,7 @@ An aggressor script is used to monitor for the provided process name and inject 
 
 When the aggressor script is loaded in Cobalt Strike, three new commands will be available:
 
-* start_entropyCapture – Starts checking for the stated process and injects into them.
+* start_entropyCapture [process name] – Starts checking for the stated process and injects into them.
 * stop_entropyCapture – Stops checking but will not unload the already loaded DLL.
 * show_entropyCapture – Prints the contents of the file showing captured entropy.
 
