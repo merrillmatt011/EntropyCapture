@@ -12,5 +12,5 @@ When the aggressor script is loaded in Cobalt Strike, three new commands will be
 
 ## Screenshot
 
-![Example Usage](images/screenshot.png)
+![Example Usage](images/screenshot.PNG)
 
