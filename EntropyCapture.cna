@@ -1,5 +1,7 @@
 @beacons = @();
 @pids = @();
+$app = "";
+
 
 on heartbeat_5s{
 		foreach $index => $beaconid (@beacons)
@@ -10,7 +12,7 @@ on heartbeat_5s{
 
 sub handleProcess{
 	$processList = $2;
-	$index = indexOf($processList, "test.exe", 0) + 9;
+	$index = indexOf($processList, $app, 0) + 9;
 
 	if($index > 9){
 
@@ -32,7 +34,8 @@ sub handleProcess{
 }
 
 alias start_entropyCapture {
-       blog($1, "Entropy Capture started\n");
+	   $app = $2;
+       blog($1, "Entropy Capture started on $app\n");
        add(@beacons,$1,0);
 }
 
