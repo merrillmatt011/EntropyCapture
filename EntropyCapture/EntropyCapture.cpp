@@ -5,41 +5,51 @@
 #include <detours.h>
 #include <dpapi.h>
 #include <strsafe.h>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <stdio.h>
 #pragma comment(lib, "crypt32.lib")
 
+std::string lpOptionalEntropy;
 
+std::string hexStr(unsigned char* data, int len)
+{
+	std::stringstream ss;
+	ss << std::hex;
+	for (int i = 0; i < len; ++i)
+		ss << std::setw(2) << std::setfill('0') << (int)data[i];
+	return ss.str();
+}
 
-LPCWSTR lpOptionalEntropy = NULL;
-
-VOID WriteEntropy() {
-	const DWORD cbBuffer = 1024;
+void WriteEntropy()
+{
 	TCHAR TempFolder[MAX_PATH];
 	GetEnvironmentVariable(L"TEMP", TempFolder, MAX_PATH);
 	TCHAR Path[MAX_PATH];
 	StringCbPrintf(Path, MAX_PATH, L"%s\\data.bin", TempFolder);
-	HANDLE hFile = CreateFile(Path, FILE_APPEND_DATA,  0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	WCHAR  DataBuffer[cbBuffer];
-	memset(DataBuffer, 0x00, cbBuffer);
-	DWORD dwBytesWritten = 0;
-	StringCbPrintf(DataBuffer, cbBuffer, L"Entropy: %s\n\n", lpOptionalEntropy);
-
-	WriteFile(hFile, DataBuffer, wcslen(DataBuffer)*2, &dwBytesWritten, NULL);
-	CloseHandle(hFile);
+	std::fstream fs;
+	fs.open(Path, std::fstream::in | std::fstream::out | std::fstream::app);
+	fs << "\nEntropy:" << lpOptionalEntropy;
+	fs.close();
 }
 
 static DPAPI_IMP BOOL(WINAPI * OriginalCryptUnprotectData)(DATA_BLOB*, LPWSTR*, DATA_BLOB*, PVOID, CRYPTPROTECT_PROMPTSTRUCT*, DWORD, DATA_BLOB*) = CryptUnprotectData;
 static DPAPI_IMP BOOL(WINAPI * OriginalCryptProtectData)(DATA_BLOB*, LPCWSTR, DATA_BLOB*, PVOID, CRYPTPROTECT_PROMPTSTRUCT*, DWORD, DATA_BLOB*) = CryptProtectData;
 
 BOOL _CryptUnprotectData(DATA_BLOB* pDataIn, LPWSTR* ppszDataDescr, DATA_BLOB* pOptionalEntropy, PVOID pvReserved, CRYPTPROTECT_PROMPTSTRUCT* pPromptStruct, DWORD dwFlags, DATA_BLOB* pDataOut) {
-	BYTE * pbOutData = pOptionalEntropy->pbData;
-	lpOptionalEntropy = (LPCWSTR)((const wchar_t*)pbOutData);
+	BYTE * pbData = pOptionalEntropy->pbData;
+	int cbData = static_cast <int> (pOptionalEntropy->cbData);
+	lpOptionalEntropy = hexStr((unsigned char*)pbData, cbData);
 	WriteEntropy();
 	return OriginalCryptUnprotectData(pDataIn, ppszDataDescr, pOptionalEntropy, pvReserved, pPromptStruct, dwFlags, pDataOut);
 }
 
 BOOL _CryptProtectData(DATA_BLOB* pDataIn, LPCWSTR szDataDescr, DATA_BLOB* pOptionalEntropy, PVOID pvReserved, CRYPTPROTECT_PROMPTSTRUCT* pPromptStruct, DWORD dwFlags, DATA_BLOB* pDataOut) {
-	BYTE * pbOutData = pOptionalEntropy->pbData;
-	lpOptionalEntropy = (LPCWSTR)((const wchar_t*)pbOutData);
+	BYTE* pbData = pOptionalEntropy->pbData;
+	int cbData = static_cast <int> (pOptionalEntropy->cbData);
+	lpOptionalEntropy = hexStr((unsigned char*)pbData, cbData);
 	WriteEntropy();
 	return OriginalCryptProtectData(pDataIn, szDataDescr, pOptionalEntropy, pvReserved, pPromptStruct, dwFlags, pDataOut);
 }
